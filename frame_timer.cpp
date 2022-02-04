@@ -23,6 +23,7 @@ int64_t snap_frequencies[] = {time_60hz,        //60fps
 //I know you can and should use a ring buffer for this, but I didn't want to include dependencies in this sample code
 const int time_history_count = 4;
 int64_t time_averager[time_history_count] = {desired_frametime, desired_frametime, desired_frametime, desired_frametime};
+int64_t averager_residual = 0;
 
 //these are stored in my Application class and are not local variables in production code
 bool running = true;
@@ -58,11 +59,15 @@ while (running){
         time_averager[i] = time_averager[i+1];
     }
     time_averager[time_history_count-1] = delta_time;
-    delta_time = 0;
+    int64_t averager_sum = 0;
     for(int i = 0; i<time_history_count; i++){
-        delta_time += time_averager[i];
+        averager_sum += time_averager[i];
     }
-    delta_time /= time_history_count;
+    delta_time = averager_sum / time_history_count;
+
+    averager_residual += averager_sum % time_history_count;
+    delta_time += averager_residual / time_history_count;
+    averager_residual %= time_history_count;
 
   //add to the accumulator
     frame_accumulator += delta_time;
