@@ -9,15 +9,21 @@ int64_t desired_frametime = SDL_GetPerformanceFrequency() / update_rate;
 
 //these are to snap deltaTime to vsync values if it's close enough
 int64_t vsync_maxerror = SDL_GetPerformanceFrequency() * .0002;
-int64_t time_60hz = SDL_GetPerformanceFrequency()/60; //since this is about snapping to common vsync values
-int64_t snap_frequencies[] = {time_60hz,        //60fps
-                              time_60hz*2,      //30fps
-                              time_60hz*3,      //20fps
-                              time_60hz*4,      //15fps
-                              (time_60hz+1)/2,  //120fps //120hz, 240hz, or higher need to round up, so that adding 120hz twice guaranteed is at least the same as adding time_60hz once
-                           // (time_60hz+2)/3,  //180fps //that's where the +1 and +2 come from in those equations
-                           // (time_60hz+3)/4,  //240fps //I do not want to snap to anything higher than 120 in my engine, but I left the math in here anyway
-                             }; 
+
+//get the refresh rate of the display (you should detect which display the window is on in production)
+int display_framerate = 60;
+SDL_DisplayMode current_display_mode;
+if(SDL_GetCurrentDisplayMode(0, &current_display_mode)==0) {
+    display_framerate = current_display_mode.refresh_rate;
+}
+int64_t snap_hz = display_framerate;
+if(snap_hz <= 0) snap_hz = 60;
+
+//these are to snap deltaTime to vsync values if it's close enough
+int64_t snap_frequencies[8] = {};
+for(int i = 0; i<8; i++) {
+    snap_frequencies[i] = (clocks_per_second / snap_hz) * (i+1);
+}
 
 //this is for delta time averaging
 //I know you can and should use a ring buffer for this, but I didn't want to include dependencies in this sample code
