@@ -4,11 +4,12 @@ int update_multiplicity = 1;
 bool unlock_framerate = true;
 
 //compute how many ticks one update should be
+int64_t clocks_per_second = SDL_GetPerformanceFrequency();
 double fixed_deltatime = 1.0 / update_rate;
-int64_t desired_frametime = SDL_GetPerformanceFrequency() / update_rate;
+int64_t desired_frametime = clocks_per_second / update_rate;
 
 //these are to snap deltaTime to vsync values if it's close enough
-int64_t vsync_maxerror = SDL_GetPerformanceFrequency() * .0002;
+int64_t vsync_maxerror = clocks_per_second * .0002;
 
 //get the refresh rate of the display (you should detect which display the window is on in production)
 int display_framerate = 60;
@@ -105,7 +106,7 @@ while (running){
             frame_accumulator -= desired_frametime;
         }
 
-        game.variable_update((double)consumedDeltaTime / SDL_GetPerformanceFrequency());
+        game.variable_update((double)consumedDeltaTime / clocks_per_second);
         game.render((double)frame_accumulator / desired_frametime);
         display(); //swap buffers
         
